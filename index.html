@@ -1,0 +1,545 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilingual Signature & Doctor Stamp Generator</title>
+    <!-- Tailwind CSS for modern responsive UI layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts integration for Typewriter style & Unicode Bengali -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&family=Noto+Serif+Bengali:wght@400;500;600;700&family=Hind+Siliguri:wght@400;600;700&family=Special+Elite&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        /* Custom scrollbar aesthetics */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        /* Simulated paper background pattern with subtle tooth texture */
+        .paper-preview {
+            background-color: #faf9f6;
+            background-image: 
+                radial-gradient(rgba(0,0,0,0.03) 1px, transparent 0),
+                radial-gradient(rgba(0,0,0,0.02) 1px, transparent 0);
+            background-size: 8px 8px;
+            background-position: 0 0, 4px 4px;
+        }
+    </style></head><body class="min-h-screen flex flex-col overflow-x-hidden">
+
+    <!-- Top Navigation Bar -->
+    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap justify-between items-center gap-4 shrink-0">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">🩺</span>
+            <div>
+                <h1 class="font-bold text-lg tracking-wide text-white">Signature & Doctor Stamp Studio</h1>
+                <p class="text-xs text-slate-400">Create beautiful self-inking doctor stamps with authentic ink bleeding & Bangla Unicode support</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="resetToReferenceState()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-md border border-slate-700 transition">
+                Reset to Reference Stamp
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-1 flex flex-col lg:flex-row min-h-0">
+        
+        <!-- Left Sidebar: Controls & Inputs -->
+        <section class="w-full lg:w-[460px] bg-slate-900 border-r border-slate-800 flex flex-col overflow-y-auto p-6 space-y-6 shrink-0">
+            
+            <!-- Lines Controller Section -->
+            <div>
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-sm font-semibold tracking-wider text-slate-300 uppercase">Text Lines Content</h2>
+                    <button onclick="addNewLine()" class="px-2.5 py-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded-md font-medium transition flex items-center gap-1">
+                        <span>+</span> Add Line
+                    </button>
+                </div>
+                
+                <p class="text-xs text-slate-400 mb-4">You can type in English or paste Unicode Bengali (বাংলা) text directly.</p>
+                
+                <!-- Dynamic Lines Input Fields list -->
+                <div id="lines-inputs-container" class="space-y-3">
+                    <!-- Loaded dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Typography & Formatting -->
+            <div class="border-t border-slate-800 pt-5 space-y-4">
+                <h2 class="text-sm font-semibold tracking-wider text-slate-300 uppercase">Typography Style</h2>
+                
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Font Family Profile</label>
+                    <select id="control-font-family" onchange="updateEngine()" class="w-full bg-slate-800 border border-slate-700 rounded-md text-sm text-white px-3 py-2 outline-none focus:border-indigo-500">
+                        <!-- Font fallback configurations mapped cleanly for English typewriter + Bangla unicode rendering -->
+                        <option value="'Courier Prime', 'Noto Serif Bengali', serif">Courier Typewriter + Noto Serif Bangla (Traditional)</option>
+                        <option value="'Special Elite', 'Noto Serif Bengali', serif">Worn Typewriter + Noto Serif Bangla (Distressed)</option>
+                        <option value="'Inter', 'Hind Siliguri', sans-serif">Modern Sans-Serif + Hind Siliguri (Clean)</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Base Font Size (px)</label>
+                        <input type="number" id="control-font-size" value="28" min="12" max="64" oninput="updateEngine()" class="w-full bg-slate-800 border border-slate-700 rounded-md text-sm text-white px-3 py-2 outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Letter Spacing (px)</label>
+                        <input type="number" id="control-letter-spacing" value="1" min="-2" max="15" oninput="updateEngine()" class="w-full bg-slate-800 border border-slate-700 rounded-md text-sm text-white px-3 py-2 outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Line Spacing (px)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="range" id="control-line-spacing" min="10" max="60" value="38" oninput="updateEngine()" class="flex-1 accent-indigo-500">
+                        <span id="label-line-spacing" class="text-xs font-mono text-slate-400 w-8 text-right">38px</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-slate-400 mb-2">Text Alignment</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="setAlignment('left')" id="btn-align-left" class="py-1.5 text-xs font-medium rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">Left</button>
+                        <button onclick="setAlignment('center')" id="btn-align-center" class="py-1.5 text-xs font-medium rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">Center</button>
+                        <button onclick="setAlignment('right')" id="btn-align-right" class="py-1.5 text-xs font-medium rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">Right</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Color Palette -->
+            <div class="border-t border-slate-800 pt-5 space-y-4">
+                <h2 class="text-sm font-semibold tracking-wider text-slate-300 uppercase">Ink Properties</h2>
+                
+                <div>
+                    <label class="block text-xs text-slate-400 mb-2">Preset Ink Colors</label>
+                    <div class="flex flex-wrap gap-2">
+                        <!-- Reference Purple -->
+                        <button onclick="setGlobalColor('#6B5BDE')" class="w-8 h-8 rounded-full border-2 border-slate-900 bg-[#6B5BDE] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-indigo-500" title="Classic Doctor Stamp Purple"></button>
+                        <!-- Traditional Blue -->
+                        <button onclick="setGlobalColor('#1d4ed8')" class="w-8 h-8 rounded-full border-2 border-slate-900 bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-indigo-500" title="Office Blue"></button>
+                        <!-- Traditional Red -->
+                        <button onclick="setGlobalColor('#dc2626')" class="w-8 h-8 rounded-full border-2 border-slate-900 bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-indigo-500" title="Urgent Red"></button>
+                        <!-- Ink Pad Black -->
+                        <button onclick="setGlobalColor('#111827')" class="w-8 h-8 rounded-full border-2 border-slate-900 bg-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-indigo-500" title="Carbon Black"></button>
+                        <!-- Custom Color Input -->
+                        <div class="relative w-8 h-8 rounded-full overflow-hidden border border-slate-700 flex items-center justify-center">
+                            <input type="color" id="control-color-picker" value="#6B5BDE" oninput="setGlobalColor(this.value)" class="absolute w-12 h-12 cursor-pointer bg-transparent border-0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Organic Distress Filters -->
+            <div class="border-t border-slate-800 pt-5 space-y-4">
+                <h2 class="text-sm font-semibold tracking-wider text-slate-300 uppercase">Rubber & Wear Effects</h2>
+                
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Erosion / Dryness (Eroded rubber)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="range" id="control-distress" min="0" max="100" value="40" oninput="updateEngine()" class="flex-1 accent-indigo-500">
+                        <span id="label-distress" class="text-xs font-mono text-slate-400 w-8 text-right">40%</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Ink Bleed (Fiber soak absorption)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="range" id="control-bleed" min="0" max="3" step="0.1" value="0.7" oninput="updateEngine()" class="flex-1 accent-indigo-500">
+                        <span id="label-bleed" class="text-xs font-mono text-slate-400 w-8 text-right">0.7px</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-slate-400 mb-1">Stamp Angle Tilt (Degrees)</label>
+                    <div class="flex items-center gap-3">
+                        <input type="range" id="control-rotation" min="-10" max="10" step="0.5" value="-1" oninput="updateEngine()" class="flex-1 accent-indigo-500">
+                        <span id="label-rotation" class="text-xs font-mono text-slate-400 w-8 text-right">-1°</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Systems -->
+            <div class="border-t border-slate-800 pt-5 space-y-3 pb-6 shrink-0">
+                <h2 class="text-sm font-semibold tracking-wider text-slate-300 uppercase">Export Stamp Asset</h2>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="exportStampImage('png')" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs rounded-md transition shadow-md flex items-center justify-center gap-1.5">
+                        📥 Export Alpha PNG
+                    </button>
+                    <button onclick="exportStampImage('jpeg')" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs rounded-md border border-slate-700 transition flex items-center justify-center gap-1.5">
+                        📥 Export JPG (White)
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- Right Preview Column: Center Stage Layout -->
+        <section class="flex-1 flex flex-col justify-between items-center bg-[#1e293b]/30 p-8 relative overflow-hidden">
+            
+            <div class="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none"></div>
+
+            <!-- Upper Preview Info -->
+            <div class="z-10 w-full max-w-lg flex justify-between items-center mb-4">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Live Production Canvas</span>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">Worn Impression Mode</span>
+            </div>
+
+            <!-- Virtual Prescription Paper Surface Frame -->
+            <div class="w-full max-w-lg h-96 paper-preview rounded-xl border border-slate-300 shadow-2xl flex items-center justify-center overflow-hidden relative z-10 transition-transform hover:scale-[1.01]">
+                <!-- Interactive High-Resolution Canvas Rendering Window -->
+                <canvas id="live-stamp-canvas" width="600" height="400" class="max-w-[90%] max-h-[90%] pointer-events-none"></canvas>
+            </div>
+
+            <!-- Lower Description Help Panel -->
+            <div class="z-10 w-full max-w-lg mt-6 bg-slate-900/60 backdrop-blur-sm border border-slate-800 rounded-lg p-4">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1 flex items-center gap-1.5">
+                    <span>💡</span> Pro-Tip for Perfect Stamp Realism
+                </h3>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Set a small **Stamp Angle Tilt** (e.g. -1° to 1°) and add **Ink Bleed** (0.5px to 1.0px) to simulate exactly how real rubber stamp ink flows into porous medical grade paper.
+                </p>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        // Default reference values mapped closely to the upload image structure
+        const DEFAULT_STAMP_STATE = {
+            lines: [
+                { text: "Dr. Some One", sizeFactor: 1.05 },
+                { text: "M B B S", sizeFactor: 0.95 },
+                { text: "General Physician", sizeFactor: 1.0 },
+                { text: "Reg: A-00000", sizeFactor: 1.0 },
+                { text: "Mobile: 01223445566", sizeFactor: 1.0 },
+                { text: "রোগী দেখার সময়: বিকাল ৫টা - রাত ৯টা", sizeFactor: 0.85 } // Demonstration of bilingual Bangla unicode integration
+            ],
+            fontFamily: "'Courier Prime', 'Noto Serif Bengali', serif",
+            baseFontSize: 24,
+            letterSpacing: 1,
+            lineSpacing: 38,
+            alignment: "left", // Reference stamp uses typewriter left alignment
+            color: "#6B5BDE", // Authentic bright violet signature stamp ink
+            distress: 35,
+            bleed: 0.7,
+            rotation: -1
+        };
+
+        // Live Application State
+        let appState = {};
+
+        // Canvas element nodes
+        let canvas, ctx;
+        let noisePatternCanvas = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            canvas = document.getElementById('live-stamp-canvas');
+            ctx = canvas.getContext('2d');
+            
+            resetToReferenceState();
+
+            // Ensure fonts are fully loaded before rendering to canvas to prevent fallback font glitches
+            if (document.fonts) {
+                document.fonts.ready.then(() => {
+                    updateEngine();
+                });
+            }
+        });
+
+        // Initialize / Revert state variables to clean reference state matching sample image
+        function resetToReferenceState() {
+            appState = JSON.parse(JSON.stringify(DEFAULT_STAMP_STATE));
+            
+            // Sync inputs in DOM elements
+            document.getElementById('control-font-family').value = appState.fontFamily;
+            document.getElementById('control-font-size').value = appState.baseFontSize;
+            document.getElementById('control-letter-spacing').value = appState.letterSpacing;
+            document.getElementById('control-line-spacing').value = appState.lineSpacing;
+            document.getElementById('label-line-spacing').innerText = `${appState.lineSpacing}px`;
+            
+            document.getElementById('control-color-picker').value = appState.color;
+            
+            document.getElementById('control-distress').value = appState.distress;
+            document.getElementById('label-distress').innerText = `${appState.distress}%`;
+            document.getElementById('control-bleed').value = appState.bleed;
+            document.getElementById('label-bleed').innerText = `${appState.bleed}px`;
+            document.getElementById('control-rotation').value = appState.rotation;
+            document.getElementById('label-rotation').innerText = `${appState.rotation}°`;
+
+            renderLinesInputs();
+            generateProceduralNoise();
+            updateEngine();
+        }
+
+        // Generate lines HTML inputs
+        function renderLinesInputs() {
+            const container = document.getElementById('lines-inputs-container');
+            container.innerHTML = '';
+
+            appState.lines.forEach((line, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flex items-center gap-2 bg-slate-850 p-2 rounded border border-slate-800 hover:border-slate-700 transition';
+                
+                // Content Input field
+                const textInput = document.createElement('input');
+                textInput.type = 'text';
+                textInput.value = line.text;
+                textInput.placeholder = `Line ${index + 1}`;
+                textInput.className = 'flex-1 bg-slate-800 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white outline-none focus:border-indigo-500';
+                textInput.oninput = (e) => {
+                    appState.lines[index].text = e.target.value;
+                    updateEngine();
+                };
+
+                // Individual Font Scaling Input
+                const sizeControl = document.createElement('input');
+                sizeControl.type = 'number';
+                sizeControl.value = line.sizeFactor || 1.0;
+                sizeControl.step = '0.05';
+                sizeControl.min = '0.5';
+                sizeControl.max = '2.0';
+                sizeControl.title = 'Individual size scaling factor';
+                sizeControl.className = 'w-14 bg-slate-800 border border-slate-700 rounded px-1.5 py-1.5 text-xs text-center text-slate-300 outline-none focus:border-indigo-500';
+                sizeControl.oninput = (e) => {
+                    appState.lines[index].sizeFactor = parseFloat(e.target.value) || 1.0;
+                    updateEngine();
+                };
+
+                // Delete Button
+                const delBtn = document.createElement('button');
+                delBtn.innerHTML = '🗑️';
+                delBtn.title = 'Remove this line';
+                delBtn.className = 'text-slate-400 hover:text-red-500 transition px-1 text-sm';
+                delBtn.onclick = () => deleteLine(index);
+
+                wrapper.appendChild(textInput);
+                wrapper.appendChild(sizeControl);
+                wrapper.appendChild(delBtn);
+                container.appendChild(wrapper);
+            });
+
+            // Update UI alignment button highlights
+            updateAlignmentButtons();
+        }
+
+        // Dynamic State Manipulation Methods
+        function addNewLine() {
+            appState.lines.push({ text: "NEW LINE / নতুন লাইন", sizeFactor: 1.0 });
+            renderLinesInputs();
+            updateEngine();
+        }
+
+        function deleteLine(index) {
+            if (appState.lines.length <= 1) return; // Prevent empty stamp
+            appState.lines.splice(index, 1);
+            renderLinesInputs();
+            updateEngine();
+        }
+
+        function setAlignment(alignValue) {
+            appState.alignment = alignValue;
+            updateAlignmentButtons();
+            updateEngine();
+        }
+
+        function updateAlignmentButtons() {
+            ['left', 'center', 'right'].forEach(align => {
+                const btn = document.getElementById(`btn-align-${align}`);
+                if (align === appState.alignment) {
+                    btn.className = "py-1.5 text-xs font-semibold rounded bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500 transition";
+                } else {
+                    btn.className = "py-1.5 text-xs font-medium rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition";
+                }
+            });
+        }
+
+        function setGlobalColor(colorHex) {
+            appState.color = colorHex;
+            document.getElementById('control-color-picker').value = colorHex;
+            updateEngine();
+        }
+
+        // Synthesize dynamic noise buffer to mask distress elements
+        function generateProceduralNoise() {
+            noisePatternCanvas = document.createElement('canvas');
+            noisePatternCanvas.width = 300;
+            noisePatternCanvas.height = 300;
+            const noiseCtx = noisePatternCanvas.getContext('2d');
+            const imgData = noiseCtx.createImageData(300, 300);
+            const data = imgData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                // Procedural generation of fiber/grit distress noise
+                const val = Math.random() > 0.88 ? Math.floor(Math.random() * 210) + 45 : 0;
+                data[i] = val;
+                data[i + 1] = val;
+                data[i + 2] = val;
+                data[i + 3] = val; // Set transparent pixels to handle destination-out compositing gracefully
+            }
+            noiseCtx.putImageData(imgData, 0, 0);
+        }
+
+        // Live Graphic Calculation Core Loop
+        function updateEngine() {
+            // Read UI parameter state modifications
+            appState.fontFamily = document.getElementById('control-font-family').value;
+            appState.baseFontSize = parseInt(document.getElementById('control-font-size').value) || 24;
+            appState.letterSpacing = parseInt(document.getElementById('control-letter-spacing').value) || 0;
+            appState.lineSpacing = parseInt(document.getElementById('control-line-spacing').value) || 30;
+            document.getElementById('label-line-spacing').innerText = `${appState.lineSpacing}px`;
+
+            appState.distress = parseInt(document.getElementById('control-distress').value);
+            document.getElementById('label-distress').innerText = `${appState.distress}%`;
+            appState.bleed = parseFloat(document.getElementById('control-bleed').value);
+            document.getElementById('label-bleed').innerText = `${appState.bleed}px`;
+            appState.rotation = parseFloat(document.getElementById('control-rotation').value);
+            document.getElementById('label-rotation').innerText = `${appState.rotation}°`;
+
+            // Prepare double buffer context
+            ctx.restore();
+            ctx.save();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+
+            // Initialize clean offscreen compositing buffer
+            const bufferCanvas = document.createElement('canvas');
+            bufferCanvas.width = canvas.width;
+            bufferCanvas.height = canvas.height;
+            const bCtx = bufferCanvas.getContext('2d');
+
+            // Apply stamp rotation translation matrix
+            bCtx.translate(cx, cy);
+            bCtx.rotate((appState.rotation * Math.PI) / 180);
+            bCtx.translate(-cx, -cy);
+
+            // Compute alignment properties
+            bCtx.fillStyle = appState.color;
+            bCtx.textAlign = appState.alignment;
+            bCtx.textBaseline = 'middle';
+
+            // Vertical calculations
+            const totalHeight = (appState.lines.length - 1) * appState.lineSpacing;
+            const startY = cy - (totalHeight / 2);
+
+            // Left padding margins based on alignment rules
+            let drawX = cx;
+            if (appState.alignment === 'left') {
+                drawX = cx - 220; // Anchor left coordinates with safe border boundary box margin
+            } else if (appState.alignment === 'right') {
+                drawX = cx + 220;
+            }
+
+            // Draw typographic stack on offscreen buffer
+            appState.lines.forEach((line, index) => {
+                const computedY = startY + (index * appState.lineSpacing);
+                const computedFontSize = appState.baseFontSize * (line.sizeFactor || 1.0);
+                bCtx.font = `normal ${computedFontSize}px ${appState.fontFamily}`;
+
+                // Regex detection to inspect if the text string contains Bengali Unicode characters
+                const containsBengali = /[\u0980-\u09FF]/.test(line.text);
+
+                // Use native letterSpacing API (supported by modern browsers) to prevent breaking grapheme shaping clusters
+                if ('letterSpacing' in bCtx) {
+                    bCtx.letterSpacing = `${appState.letterSpacing}px`;
+                    bCtx.fillText(line.text, drawX, computedY);
+                } else if (appState.letterSpacing === 0 || containsBengali) {
+                    // Safe Fallback: if browser doesn't support canvas letterSpacing, bypass manual splitting for Bengali unicode
+                    bCtx.fillText(line.text, drawX, computedY);
+                } else {
+                    // Safe split tracking rendering fallback only for simple ASCII/English strings
+                    drawTrackingSpacedText(bCtx, line.text, drawX, computedY, appState.letterSpacing, appState.alignment);
+                }
+            });
+
+            // Perform image processing filters (Blur / Distress masking)
+            if (appState.bleed > 0) {
+                bCtx.filter = `blur(${appState.bleed}px)`;
+                bCtx.drawImage(bufferCanvas, 0, 0);
+                bCtx.filter = 'none';
+            }
+
+            // Apply procedural stamp distress pattern overlay
+            if (appState.distress > 0 && noisePatternCanvas) {
+                bCtx.save();
+                bCtx.globalCompositeOperation = 'destination-out';
+                bCtx.globalAlpha = appState.distress / 100;
+                
+                // Tile noise across canvas boundary
+                for (let x = 0; x < canvas.width; x += 300) {
+                    for (let y = 0; y < canvas.height; y += 300) {
+                        bCtx.drawImage(noisePatternCanvas, x, y);
+                    }
+                }
+                bCtx.restore();
+            }
+
+            // Render composited buffer onto on-screen live canvas
+            ctx.drawImage(bufferCanvas, 0, 0);
+        }
+
+        // Draw text with uniform letter tracking control (Fallback routine for legacy browsers - only safe on non-complex scripts)
+        function drawTrackingSpacedText(ctxRef, textString, targetX, targetY, spaceValue, alignment) {
+            const characters = textString.split('');
+            const wordWidths = characters.map(char => ctxRef.measureText(char).width);
+            const totalWidth = wordWidths.reduce((a, b) => a + b, 0) + (characters.length - 1) * spaceValue;
+
+            let renderX = targetX;
+            if (alignment === 'center') {
+                renderX = targetX - (totalWidth / 2);
+            } else if (alignment === 'right') {
+                renderX = targetX - totalWidth;
+            }
+
+            characters.forEach((char, index) => {
+                ctxRef.fillText(char, renderX, targetY);
+                renderX += wordWidths[index] + spaceValue;
+            });
+        }
+
+        // High resolution raster PNG/JPEG export framework
+        function exportStampImage(fileType) {
+            // Re-render stamp at 2x crisp resolution to handle high-DPI printer capabilities
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = canvas.width * 2;
+            exportCanvas.height = canvas.height * 2;
+            const exCtx = exportCanvas.getContext('2d');
+
+            // Apply high-resolution scale multiplier
+            exCtx.scale(2, 2);
+
+            // Set up background
+            if (fileType === 'jpeg') {
+                exCtx.fillStyle = '#FFFFFF';
+                exCtx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            // Copy main canvas drawing buffer contents safely
+            exCtx.drawImage(canvas, 0, 0);
+
+            // Anchor download trigger
+            const dataUrl = fileType === 'jpeg' ? exportCanvas.toDataURL('image/jpeg', 0.95) : exportCanvas.toDataURL('image/png');
+            const downloadLink = document.createElement('a');
+            downloadLink.download = `ink_stamp_export_${Date.now()}.${fileType}`;
+            downloadLink.href = dataUrl;
+            downloadLink.click();
+        }
+    </script></body></html>
